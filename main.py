@@ -19,7 +19,7 @@ except Exception as e:
     st.stop()
 
 # Validate columns
-required_cols = {"name", "symbol", "currency", "shares", "target"}
+required_cols = {"name", "symbol", "currency", "shares"}
 if not required_cols.issubset(df.columns):
     st.error(f"Missing columns in Google Sheet. Required: {required_cols}")
     st.write("Loaded columns:", df.columns.tolist())
@@ -36,19 +36,15 @@ with st.spinner("Fetching live prices and FX rates..."):
 total_thb = df["value (thb)"].sum()
 df["weight"] = (df["value (thb)"] / total_thb).round(4)
 
-# Convert 'target' %string to numbers
-df["target"] = pd.to_numeric(df["target"].str.replace("%", ""), errors="coerce") / 100
-
 # Portfolio Table with formatted numbers
 st.subheader("📄 Portfolio Breakdown")
-show_cols = ["name", "currency", "shares", "price", "fx rate", "value (thb)", "weight", "target"]
+show_cols = ["name", "currency", "shares", "price", "fx rate", "value (thb)", "weight"]
 format_dict = {
     "shares": "{:,.2f}",
     "price": "{:,.2f}",
     "fx rate": "{:,.2f}",
     "value (thb)": "{:,.0f}",
     "weight": lambda x: f"{x * 100:.1f}%",
-    "target": lambda x: f"{x * 100:.1f}%"
 }
 st.dataframe(df[show_cols].style.format(format_dict))
 
