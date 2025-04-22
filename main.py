@@ -2,13 +2,13 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from fetch import get_price, get_fx_to_thb
-from positionsize import classify_position  # Import the new function
 
-st.set_page_config(page_title="Portfolio Rebalancer", layout="centered")
-st.title("📊 Portfolio Rebalancer")
+st.set_page_config(page_title="Portfolio Report", layout="centered")
+st.title("📊 Portfolio Report")
 
 # Access the Google Sheets URL from Streamlit secrets
 sheet_url = st.secrets["google_sheet"]["url"]
+sheet_url = sheet_url.replace('/edit#gid=', '/gviz/tq?tqx=out:csv&gid=')
 
 # Load and clean data
 try:
@@ -37,41 +37,20 @@ total_thb = df["value (thb)"].sum()
 df["weight"] = (df["value (thb)"] / total_thb).round(4)
 
 # Convert 'target' %string to numbers
-df["target"] = pd.to_numeric(
-    df["target"].astype(str).str.replace(r"[^\d.]+", "", regex=True),
-    errors="coerce"
-) / 100
-
-# Classify each position (oversized, undersized, aligned) based on target and weight
-df["position"] = df.apply(
-    lambda row: pd.Series(classify_position(row["weight"], row["target"])),
-    axis=1
-)
+df["target"] = pd.to_numeric(df["target"].str.replace("%", ""), errors="coerce") / 100
 
 # Portfolio Table with formatted numbers
 st.subheader("📄 Portfolio Breakdown")
-show_cols = ["name", "currency", "shares", "price", "fx rate", "value (thb)", "weight", "position"]
+show_cols = ["name", "currency", "shares", "price", "fx rate", "value (thb)", "weight", "target"]
 format_dict = {
     "shares": "{:,.2f}",
     "price": "{:,.2f}",
     "fx rate": "{:,.2f}",
     "value (thb)": "{:,.0f}",
     "weight": lambda x: f"{x * 100:.1f}%",
+    "target": lambda x: f"{x * 100:.1f}%"
 }
-# Portfolio Table with color text
-def highlight_position(val):
-    if val == "oversize":
-        return "color: red"
-    elif val == "undersize":
-        return "color: green"
-    return ""
-styled_df = (
-    df[show_cols]
-    .style
-    .format(format_dict)
-    .applymap(highlight_position, subset=["position"])
-)
-st.dataframe(styled_df)
+st.dataframe(df[show_cols].style.format(format_dict))
 
 # Show total portfolio value
 st.metric("💰 Total Portfolio Value (THB)", f"฿{total_thb:,.0f}")
