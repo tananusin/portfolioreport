@@ -36,7 +36,7 @@ show_individual = st.toggle(
 portfolio_df = individual_df if show_individual else summarized_df
 
 # --- Format and Display Table ---
-show_cols = ["name", "symbol", "currency", "shares", "price", "fx rate", "value (thb)", "weight"]
+show_cols = ["name", "currency", "shares", "price", "fx rate", "value (thb)", "weight"]
 format_dict = {
     "shares": lambda x: f"{x:,.2f}" if x != 0.0 else "-",
     "price": lambda x: f"{x:,.2f}" if x != 0.0 else "-",
